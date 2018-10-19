@@ -1,0 +1,18 @@
+- hosts: virtual
+  remote_user: root
+  tasks:
+
+    - name: get repo
+      get_url:
+        url: "https://download.docker.com/linux/centos/docker-ce.repo"
+        dest: "/etc/yum.repos.d/"
+    - name: setup yum-utils
+      yum: name=yum-utils state=present
+    - name: setup device-mapper-persistent-data
+      yum: name=device-mapper-persistent-data state=present
+    - name: setup lvm2
+      yum: name=lvm2 state=present
+    - name: setup docker-ce
+      yum: name=docker-ce state=present
+    - name: start docker
+      service: name=docker.service enabled=yes state=started
