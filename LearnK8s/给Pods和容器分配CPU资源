@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cpu-demo
+  namespace: cpu-example
+spec:
+  containers:
+  - name: cpu-demo-ctr
+    image: vish/stress
+    resources:
+      limits:
+        cpu: "1"
+      requests:
+        cpu: "0.5"
+    args:
+    - -cpus
+    - "2"
+
+kubectl create -f /xx/xx.yaml --namespace=xx
+args指出容器尝试使用2个cpu.
+其他指令和分配内存时查询pod相同.
+在上边的yaml文件启动的pod的容器cpu使用被限制了,因为尝试使用的cpu超出了限制.也有可能是Node的cpu数量不够.
+可以使用分数来表示CPU,另外 100m CPU, 100 milliCPU, and 0.1 CPU are all the same.  精度不能大于1m.
+The CPU request and limit for a Pod is the sum of the CPU requests and limit for all the Containers in the Pod.
+如果没指定CPU请求和限制,将会使用Node可用的最大CPU数,或者在命名空间内有默认的限制大小,也可以自己设定一个Limitrange.
+
+配置CPU和内存为了让内存和CPU资源能够有效的使用,同时request小的CPU/内存会让Pod更容易被调度. 设置limit的重要性更大
+

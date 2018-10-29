@@ -1,0 +1,20 @@
+添加拓展资源在yaml文件中使用resources:requests字段
+有效的拓展名字形如:example.com/foo. 其中example.com为组织名,foo为资源名
+例:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: extended-resource-demo
+spec:
+  containers:
+  - name: extended-resource-demo-ctr
+    image: nginx
+    resources:
+      requests:
+        example.com/dongle: 3
+      limits:
+        example.com/dongle: 3
+
+在这个容器里请求了三个dongle
+如果再创建一个Pod申请两个dongle则不能满足,因为第一个Pod已经使用了四个dongle中的三个,使用kubectl describe pod xx 命令可以看到Warning,使用kubectl get pod 命令可以看到该Pod没有被调度,处于Pending状态

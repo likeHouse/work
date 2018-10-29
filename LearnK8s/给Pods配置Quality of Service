@@ -1,0 +1,50 @@
+kubernetes使用QoS(Quality of Service)类来决定Pods的调度和驱除
+When Kubernetes creates a Pod it assigns one of these QoS classes to the Pod:       
+     Guaranteed      
+     Burstable  
+     BestEffort
+
+1.Guaranteed策略: 
+     每个容器必须有memory和cpu的requests和limits,并且requests和limits大小必须相同.
+创建Pod,kubectl get pod qos-demo --namespace=qos-example --output=yaml后可以发现:
+
+spec:
+  containers:
+    ...
+    resources:
+      limits:
+        cpu: 700m
+        memory: 200Mi
+      requests:
+        cpu: 700m
+        memory: 200Mi
+...
+  qosClass: Guaranteed
+
+Kubernetes给了容器一个QoS class of Guaranteed
+如果指定了memory/cpu的limits而没有指定requests,Kubernetes自动分配一个和Limits相匹配的requests
+2.a QoS class of Burstable:
+    Pod不符合QoS class of Guaranteed,并且Pod至少有一个容器有memory/cpu requests
+3.a QoS class of BestEffort:
+     Pod的容器没有memory/cpu 的limits或requests
+例:
+创建一个有两个容器的Pod:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-demo-4
+  namespace: qos-example
+spec:
+  containers:
+
+  - name: qos-demo-4-ctr-1
+    image: nginx
+    resources:
+      requests:
+        memory: "200Mi"
+
+  - name: qos-demo-4-ctr-2
+    image: redis
+
+Kubernetes gave the Pod a QoS class of Burstable

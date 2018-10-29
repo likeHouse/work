@@ -1,0 +1,27 @@
+步骤总结;
+     1.集群管理员创建一个基于物理存储的永久卷,并且不把它和任何Pod关联起来.
+     2.集群用户创建一个永久卷的声明(PersistentVolumeClaim),来自动绑定到一个永久卷
+     3.据群用户创建一个Pod,其中使用上一步的永久卷声明来存储
+在单节点集群我们可以使用一个本地目录来创建永久卷来测试,但在生产集群中,通常会使用一个网络资源来作为存储.
+
+本地路径的永久卷配置:
+
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: task-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+
+创建永久卷:kubectl create -f xx.yaml
+
+查看永久卷信息:kubectl get pv task-pv-volume
+这个配置指定了一个卷在node节点的/mnt/data目录下,同时指定大小为10G,存储模式为ReadWriteOnce(卷能被节点以读写的方式挂载),另外指定了名字为manual.

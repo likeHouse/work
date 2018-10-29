@@ -1,0 +1,37 @@
+docker文件系统的生命周期和docker的生命周期相同,当docker终止或重启时文件也会消除.所以对于有状态的程序,如数据库等使用卷来存储很重要.
+例:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis
+spec:
+  containers:
+  - name: redis
+    image: redis
+    volumeMounts:
+    - name: redis-storage
+      mountPath: /data/redis
+  volumes:
+  - name: redis-storage
+    emptyDir: {}
+
+在这个yaml文件中创建了一个Pod,其中有一个类型为emptyDir的卷,它的生命周期和pod相同
+
+
+使用 kubectl get pod redis --watch 监控pod状态
+
+创建pod后另外打开一个终端,执行:
+
+kubectl exec -it redis -- /bin/bash  可以运行容器
+在/data/redis/下创建文件
+更新apt,下载procps,执行ps aux,查看redis的pid并kill掉
+可以在原来的终端里看到redis的改变:
+
+NAME      READY     STATUS     RESTARTS   AGE
+redis     1/1       Running    0          13s
+redis     0/1       Completed  0         6m
+redis     1/1       Running    1         6m
+
+在这里容器终止后自动重启是因为容器的restartPolicy设置为了Always
+此时返回/data/redis目录查看原来创建的文件依然还在 

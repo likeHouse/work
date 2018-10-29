@@ -1,0 +1,67 @@
+查看版本:kubectl version  集群中的节点内存至少为300M
+查看支持的api: kubectl get apiservices
+
+命名空间:可以视为虚拟集群,在一个Kubernetes集群中可以有多个命名空间,它们在逻辑上相互独立
+创建命名空间:
+
+kubectl create namespace mem-example
+
+//也可以使用yaml文件来创建:
+
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: test
+  labels:
+    name: test
+kubectl apply -f test.yaml
+
+查看命名空间:kubectl get namespace
+命令都是基于active的命名空间的,要查看其他空间需要加上名字;kubectl get pods --name=mem-example
+# kubectl config view //先查看是否设置了current-context
+# kubectl config set-context default --namespace=bs-test //设置default配置的namespace参数
+# kubectl config set current-context default //设置当前环境变量为 default
+通过这段代码设置默认的命名空间后，就不用每次在输入命令的时候带上--namespace参数了。
+
+创建一个pod和一个容器并进行内存分配:
+内存分配在配置文件(yaml)文件中使用resources:requests(请求),resources:limits(限制大小)字段.
+pods/resource/memory-request-limit.yaml :
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-demo
+  namespace: mem-example
+spec:
+  containers:
+  - name: memory-demo-ctr
+    image: polinux/stress
+    resources:
+      limits:
+        memory: "200Mi"
+      requests:
+        memory: "100Mi"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "150M", "--vm-hang", "1"]
+args字段指定了容器启动时的参数,"--vm-bytes", "150M"指定了容器运行时申请150M内存
+创建Pod:kubectl create -f /pods/resource/memory-request-limit.yaml --namespace=mem-example
+查看(指定)pod:kubectl get pods namespace=XX  | kubectl get pod pod_name namespace=XX
+查看pod详细信息:
+
+kubectl get pod memory-demo --output=yaml --namespace=mem-example
+
+获取pod的metrics:
+kubectl top pod memory-demo --namespace=mem-example
+删除Pod:
+
+kubectl delete pod memory-demo --namespace=mem-example
+
+容器内存可找过请求requests,但不能超过限制limits,超过后它将被终止.被终止的容器如果能重启kubectl将会自动将它重启.
+Pod历史事件详细信息:
+
+kubectl describe pod memory-demo-2 --namespace=mem-example  // kubectl describe pods
+Pod的内存申请和上限为其中容器的内存申请和上限之和
+不指定容器的内存容器内存上限为节点剩余内存之和,或者命名空间有默认的内存限制则会使用这个默认的内存限制
+删除命名空间,自动删除其中的Pods:kubectl delete namespace mem-example
+
+在kubernetes中,Mi表示（1Mi=1024x1024）,M表示（1M=1000x1000）（其它单位类推， 如Ki/K Gi/G）
+
